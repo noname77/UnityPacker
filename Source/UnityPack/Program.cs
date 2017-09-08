@@ -63,7 +63,7 @@ namespace UnityPacker
                     Console.WriteLine("");
                 }
                 
-                string hash1 = RandomHash(), hash2 = RandomHash();
+                string hash1 = RandomHash();
 
                 if (meaningfulHashes)
                 {
@@ -95,9 +95,20 @@ namespace UnityPacker
                 Directory.CreateDirectory(path);
 
                 File.Copy(file, Path.Combine(path, "asset"));
-                string pathFileContents = root + altName.Replace(Path.DirectorySeparatorChar + "", "/") + "\n" + hash2;
+                string pathFileContents = root + altName.Replace(Path.DirectorySeparatorChar + "", "/");
                 using (StreamWriter writer = new StreamWriter(Path.Combine(path, "pathname")))
                     writer.Write(pathFileContents);
+
+                try {
+                    File.Copy(file+".meta", Path.Combine(path, "asset.meta"));
+                } catch (FileNotFoundException e) {
+                    string metaFileContents = String.Format(
+                        "fileFormatVersion: 2\nguid: {0}\n", hash1);
+
+                    using (StreamWriter writer = new StreamWriter(Path.Combine(path, "asset.meta")))
+                    writer.Write(metaFileContents);
+                }
+
             }
 
             CreateTarGZ(fileName  + ".unitypackage", tmpPath);
@@ -160,6 +171,10 @@ namespace UnityPacker
             foreach (string filename in filenames)
             {
                 tarEntry = TarEntry.CreateEntryFromFile(filename);
+                tarEntry.TarHeader.UserName = string.Empty;
+                tarEntry.TarHeader.GroupName = string.Empty;
+                tarEntry.TarHeader.UserId = 0;
+                tarEntry.TarHeader.Mode = 420;
                 tarEntry.Name = filename.Remove(0, tarArchive.RootPath.Length + 1);
                 tarArchive.WriteEntry(tarEntry, true);
             }
