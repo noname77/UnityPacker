@@ -44,17 +44,24 @@ namespace UnityPacker
 				if (file.StartsWith("."))
                 	altName = file.Replace("." + Path.DirectorySeparatorChar, "");
 				
+                Console.Write(String.Format("DEBUG: altName - {0}", altName));
+
 				bool skip = false;
-                foreach (string dir in dirs)
+                foreach (string dir in dirs) {
                     if (altName.StartsWith(dir))
                     {
                         skip = true;
                         break;
                     }
+                }
 
                 string extension = Path.GetExtension(file).Replace(".", "");
-                if (skip || extensions.Contains(extension))
+                if (skip || extensions.Contains(extension)) {
+                    Console.WriteLine(String.Format(" (skipping)"));
                     continue;
+                } else {
+                    Console.WriteLine("");
+                }
                 
                 string hash1 = RandomHash(), hash2 = RandomHash();
 
@@ -63,27 +70,34 @@ namespace UnityPacker
                     string metaFile = file + ".meta";
                     string hash = "";
                     
-                    using (StreamReader read = new StreamReader(metaFile))
-                    {
-                        while (!read.EndOfStream)
+                    try {
+                        using (StreamReader read = new StreamReader(metaFile))
                         {
-                            string line = read.ReadLine();
-                            if (line.StartsWith("guid"))
+                            while (!read.EndOfStream)
                             {
-                                hash = line.Split(' ')[1];
-                                break;
+                                string line = read.ReadLine();
+                                if (line.StartsWith("guid"))
+                                {
+                                    hash = line.Split(' ')[1];
+                                    break;
+                                }
                             }
                         }
+                        hash1 = hash;
+                    } catch (FileNotFoundException e) {
+                        Console.WriteLine(String.Format(
+                          "DEBUG: {0} file not found, using random hash",
+                          metaFile));
                     }
-                    hash1 = hash;
                 }
 
                 string path = Path.Combine(tmpPath, hash1);
                 Directory.CreateDirectory(path);
 
                 File.Copy(file, Path.Combine(path, "asset"));
+                string pathFileContents = root + altName.Replace(Path.DirectorySeparatorChar + "", "/") + "\n" + hash2;
                 using (StreamWriter writer = new StreamWriter(Path.Combine(path, "pathname")))
-                    writer.Write(root + altName.Replace(Path.DirectorySeparatorChar + "", "/") + "\n" + hash2);
+                    writer.Write(pathFileContents);
             }
 
             CreateTarGZ(fileName  + ".unitypackage", tmpPath);
