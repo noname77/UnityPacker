@@ -48,3 +48,32 @@ Let's focus on the line I'm using UnityPacker:
 6. `".git"` : Similar to the 5th argument. Files in the .git directory will not be included in the output package.
 
 *Was tested on Unity 4 and 5 with packages from both Windows and Linux hosts.*
+
+### Notes for building on Mac
+
+Assuming you have Unity installed here's what I had to do after the modification:
+
+```
+mkdir /tmp/unity-monodevelop-monoframework-4.0.5
+ln -s /Applications/Unity/MonoDevelop.app/Contents/Frameworks/Mono.framework/Versions/Current/bin /tmp/unity-monodevelop-monoframework-4.0.5/
+ls -s /Applications/Unity/MonoDevelop.app/Contents/Frameworks/Mono.framework/Versions/Current/lib /tmp/unity-monodevelop-monoframework-4.0.5/
+export XBUILD_EMIT_SOLUTION   # not sure if this one is necessary
+```
+
+now build with:
+```
+/Applications/Unity/MonoDevelop.app/Contents/Frameworks/Mono.framework/Versions/Current/bin/xbuild UnityPacker.sln
+```
+
+and copy the files in `UnityPack/bin/Debug/` to your chosen location or use straight from there
+
+build the unity package with:
+```
+/Applications/Unity/MonoDevelop.app/Contents/Frameworks/Mono.framework/Versions/Current/bin/mono UnityPacker.exe <your arguments here>
+```
+
+note:
+Only building in current directory (`.` as the first argument) seems to produce desired effect.
+Also need to add trailing slash to the second argument.
+
+
